@@ -1,181 +1,146 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { JWT_SECRET } from '@repo/backend-common/config';
+import { JWT_SECRET } from "@repo/backend-common/config";
 import { middleware } from "./middleware";
 import { CreateUserSchema, SigninSchema, CreateRoomSchema } from "@repo/common/types";
 import { prismaClient } from "@repo/db/client";
 import bcrypt from "bcrypt";
 import cors from "cors";
 
-const allowedOrigins = [
-    "http://localhost:3000" // Include localhost for development
-  ];
-  
-  
+const allowedOrigins = ["http://localhost:3000"];
+
 const app = express();
 app.use(express.json());
 
-app.use(cors({
-    origin: function (origin, callback) {
+app.use(
+  cors({
+    origin: (origin, callback) => {
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
       }
     },
-    credentials: true, // Allow cookies if needed
-  }));
+    credentials: true,
+  })
+);
 
-app.get("/", (req, res) => {
-    res.json({
-        message: "Hello from doodle-deck's http-backend!"
-    })
+// ---------------- Signup ----------------
+app.post("/signup", async (req: Request, res: Response): Promise<void> => {
+  const parsedData = CreateUserSchema.safeParse(req.body);
+  if (!parsedData.success) {
+    res.status(400).json({ message: "Incorrect inputs" });
+    return;
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(parsedData.data.password, 10);
+    const user = await prismaClient.user.create({
+      data: {
+        email: parsedData.data.email,
+        password: hashedPassword,
+        name: parsedData.data.name,
+      },
+    });
+
+    res.status(201).json({ userId: user.id });
+  } catch (e) {
+    res.status(409).json({ message: "User already exists" });
+  }
 });
 
-app.post("/signup", async (req, res) => {
+// ---------------- Signin ----------------
+app.post("/signin", async (req: Request, res: Response): Promise<void> => {
+  const parsedData = SigninSchema.safeParse(req.body);
+  if (!parsedData.success) {
+    res.status(400).json({ message: "Incorrect inputs" });
+    return;
+  }
 
-    const parsedData = CreateUserSchema.safeParse(req.body);
-    if (!parsedData.success) {
-        console.log(parsedData.error);
-        res.json({
-            message: "Incorrect inputs"
-        })
-        return;
-    }
-    try {
-        // Hash the password
-        const hashedPassword = await bcrypt.hash(parsedData.data.password, 10);
-        const user = await prismaClient.user.create({
-            data: {
-                email: parsedData.data?.email,
-                password: hashedPassword,
-                name: parsedData.data.name
-            }
-        })
-        res.json({
-            userId: user.id
-        })
-    } catch(e) {
-        res.status(411).json({
-            message: "User already exists with this username"
-        })
-    }
-})
+  const user = await prismaClient.user.findFirst({
+    where: { email: parsedData.data.email },
+  });
 
-app.post("/signin", async (req, res) => {
-    const parsedData = SigninSchema.safeParse(req.body);
-    if (!parsedData.success) {
-        res.json({
-            message: "Incorrect inputs"
-        })
-        return;
-    }
-    const user = await prismaClient.user.findFirst({
-        where: {
-            email: parsedData.data.email
-        }
-    })
+  if (!user) {
+    res.status(403).json({ message: "Invalid email or password" });
+    return;
+  }
 
-    if (!user) {
-        res.status(403).json({
-            message: "Incorrect email or username"
-        })
-        return;
-    }
+  const isPasswordCorrect = await bcrypt.compare(
+    parsedData.data.password,
+    user.password
+  );
+  if (!isPasswordCorrect) {
+    res.status(403).json({ message: "Invalid email or password" });
+    return;
+  }
 
-    // Compare the hashed pws here
-    const isPasswordCorrect = await bcrypt.compare(parsedData.data.password, user.password);
-    if (!isPasswordCorrect) {
-        res.status(403).json({
-            message: "Incorrect password"
-        })
-        return;
-    }
+  const token = jwt.sign({ userId: user.id }, JWT_SECRET);
 
-    const token = jwt.sign({
-        userId: user?.id
-    }, JWT_SECRET);
+  res.status(200).json({
+    username: user.name,
+    userId: user.id,
+    token,
+  });
+});
 
-    // Set the cookie
-    res.setHeader(
-        "Set-Cookie",
-        `token=${token}; HttpOnly; Secure; Path=/; SameSite=Strict`,
-    );
+// ---------------- Create Room ----------------
+app.post("/room", middleware, async (req: Request, res: Response): Promise<void> => {
+  const parsedData = CreateRoomSchema.safeParse(req.body);
+  if (!parsedData.success) {
+    res.status(400).json({ message: "Incorrect inputs" });
+    return;
+  }
 
-    res.status(200).json({
-        username: user.name,
-        userId: user.id,
-        token
-    });
-})
+  // @ts-ignore (injected from middleware)
+  const userId = req.userId;
 
-app.post("/room", middleware, async (req, res) => {
-    const parsedData = CreateRoomSchema.safeParse(req.body);
-    if (!parsedData.success) {
-        res.json({
-            message: "Incorrect inputs"
-        })
-        return;
-    }
-    // @ts-ignore: TODO: Fix this
-    const userId = req.userId;
-
-    try {
-        const room = await prismaClient.room.create({
-            data: {
-                slug: parsedData.data.name,
-                adminId: userId
-            }
-        })
-
-        res.json({
-            roomId: room.id
-        })
-    } catch(e) {
-        res.status(411).json({
-            message: "Room already exists with this name"
-        })
-    }
-})
-
-app.get("/chats/:roomId", async (req, res) => {
-    try {
-        const roomId = Number(req.params.roomId);
-        console.log(req.params.roomId);
-        const messages = await prismaClient.chat.findMany({
-            where: {
-                roomId: roomId
-            },
-            orderBy: {
-                id: "desc"
-            },
-            take: 1000
-        });
-
-        res.json({
-            messages
-        })
-    } catch(e) {
-        //console.log(e);
-        res.json({
-            messages: []
-        })
-    }
-    
-})
-
-app.get("/room/:slug", async (req, res) => {
-    const slug = req.params.slug;
-    const room = await prismaClient.room.findFirst({
-        where: {
-            slug
-        }
+  try {
+    const room = await prismaClient.room.create({
+      data: {
+        slug: parsedData.data.name,
+        adminId: userId,
+      },
     });
 
-    res.json({
-        room
-    })
-})
+    res.status(201).json({ roomId: room.id });
+  } catch (e) {
+    res.status(409).json({ message: "Room already exists" });
+  }
+});
 
-console.log("http-backend listening on port - 4001")
-app.listen(4001);
+// ---------------- Get Chats ----------------
+app.get("/chats/:roomId", async (req: Request, res: Response): Promise<void> => {
+  try {
+    const roomId = Number(req.params.roomId);
+    if (isNaN(roomId)) {
+      res.status(400).json({ message: "Invalid roomId" });
+      return;
+    }
+
+    const messages = await prismaClient.chat.findMany({
+      where: { roomId },
+      orderBy: { id: "desc" },
+      take: 100,
+    });
+
+    res.json({ messages });
+  } catch (e) {
+    res.status(500).json({ messages: [] });
+  }
+});
+
+// ---------------- Get Room by Slug ----------------
+app.get("/room/:slug", async (req: Request, res: Response): Promise<void> => {
+  const slug = req.params.slug;
+  const room = await prismaClient.room.findFirst({ where: { slug } });
+
+  if (!room) {
+    res.status(404).json({ message: "Room not found" });
+    return;
+  }
+
+  res.json({ room });
+});
+
+app.listen(4001, () => console.log("http-backend listening on port 4001"));

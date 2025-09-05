@@ -1,9 +1,10 @@
 "use client";
+
 import { PencilRuler } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { HTTP_BACKEND } from "@/config";
 
 export default function CreateRoomPage() {
@@ -19,7 +20,7 @@ export default function CreateRoomPage() {
   const createRoom = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!formData.name) {
+    if (!formData.name.trim()) {
       toast.error("Please enter a room name");
       return;
     }
@@ -37,39 +38,46 @@ export default function CreateRoomPage() {
         `${HTTP_BACKEND}/room`,
         { name: formData.name },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      const roomId = response.data.roomId;
+      const roomId = response.data?.roomId;
+
+      if (!roomId || isNaN(Number(roomId))) {
+        throw new Error("Invalid roomId returned from server");
+      }
+
       toast.success("Room created successfully");
       router.push(`/canvas/${roomId}`);
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         if (error.response) {
-          // Server responded with a status code outside 2xx
+          // ✅ Server responded with an error
           console.error("Server Error:", error.response.data);
+
           if (error.response.status === 403) {
             toast.error("Unauthorized. Please log in again.");
             router.push("/signin");
           } else if (error.response.status === 409) {
             toast.error("Room already exists with this name.");
           } else {
-            toast.error(error.response.data.message || "Something went wrong");
+            toast.error(
+              error.response.data?.message || "Something went wrong on the server"
+            );
           }
         } else if (error.request) {
-          // Request was made but no response received
+          // ✅ Request sent but no response received
           console.error("No response received:", error.request);
           toast.error("Server did not respond. Please try again later.");
         } else {
-          // Something happened while setting up the request
+          // ✅ Error in request setup
           console.error("Axios setup error:", error.message);
           toast.error("Request setup failed.");
         }
       } else {
-        console.error("Unknown error:", error);
+        // ✅ Non-Axios error
+        console.error("Unexpected error:", error);
         toast.error("An unexpected error occurred.");
       }
     } finally {
@@ -89,9 +97,13 @@ export default function CreateRoomPage() {
             Create a room and collaborate
           </h1>
         </div>
+
         <form onSubmit={createRoom}>
           <div className="mb-4">
-            <label htmlFor="name" className="block text-sm font-medium text-zinc-700">
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-zinc-700"
+            >
               Room Name
             </label>
             <input
@@ -103,6 +115,7 @@ export default function CreateRoomPage() {
               placeholder="Enter room name"
             />
           </div>
+
           <button
             type="submit"
             disabled={loading}
@@ -111,9 +124,13 @@ export default function CreateRoomPage() {
             {loading ? "Creating..." : "Create Room"}
           </button>
         </form>
+
         <div className="text-center mt-4">
           <p className="text-zinc-700">
-            Want to join a room? <a className="underline" href="/join-room">Join room</a>
+            Want to join a room?{" "}
+            <a className="underline" href="/join-room">
+              Join room
+            </a>
           </p>
         </div>
       </div>

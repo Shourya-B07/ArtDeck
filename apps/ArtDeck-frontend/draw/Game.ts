@@ -100,8 +100,6 @@ export class Game {
             this.existingShapes = this.undoStack.pop()!;
             this.clearCanvas();
         }
-
-        alert("undo");
     }
 
     redo() {
@@ -110,8 +108,6 @@ export class Game {
             this.existingShapes = this.redoStack.pop()!;
             this.clearCanvas();
         }
-
-        alert("redo");
     }
 
     destroy() {
