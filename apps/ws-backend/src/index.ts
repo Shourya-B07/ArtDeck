@@ -7,7 +7,7 @@ const wss = new WebSocketServer({ port: 8080 });
 
 interface User {
   ws: WebSocket;
-  rooms: number[]; // ✅ numeric IDs
+  rooms: number[];
   userId: string;
 }
 
@@ -61,7 +61,7 @@ wss.on("connection", function connection(ws, request) {
       if (isNaN(roomId)) return;
       const user = users.find((x) => x.ws === ws);
       if (user) {
-        user.rooms = user.rooms.filter((x) => x !== roomId); // ✅ fixed
+        user.rooms = user.rooms.filter((x) => x !== roomId);
       }
     }
 

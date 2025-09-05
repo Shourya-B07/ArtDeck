@@ -24,7 +24,7 @@ export function RoomCanvas({ roomId }: { roomId: string }) {
       setSocket(ws);
       const data = JSON.stringify({
         type: "join_room",
-        roomId: Number(roomId), // ✅ ensure number not string
+        roomId: Number(roomId),
       });
       console.log("Joining room:", data);
       ws.send(data);

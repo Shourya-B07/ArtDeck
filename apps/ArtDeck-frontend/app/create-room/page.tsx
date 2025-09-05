@@ -53,7 +53,6 @@ export default function CreateRoomPage() {
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         if (error.response) {
-          // ✅ Server responded with an error
           console.error("Server Error:", error.response.data);
 
           if (error.response.status === 403) {
@@ -67,16 +66,13 @@ export default function CreateRoomPage() {
             );
           }
         } else if (error.request) {
-          // ✅ Request sent but no response received
           console.error("No response received:", error.request);
           toast.error("Server did not respond. Please try again later.");
         } else {
-          // ✅ Error in request setup
           console.error("Axios setup error:", error.message);
           toast.error("Request setup failed.");
         }
       } else {
-        // ✅ Non-Axios error
         console.error("Unexpected error:", error);
         toast.error("An unexpected error occurred.");
       }

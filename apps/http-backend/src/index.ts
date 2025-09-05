@@ -24,8 +24,6 @@ app.use(
     credentials: true,
   })
 );
-
-// ---------------- Signup ----------------
 app.post("/signup", async (req: Request, res: Response): Promise<void> => {
   const parsedData = CreateUserSchema.safeParse(req.body);
   if (!parsedData.success) {
@@ -49,7 +47,6 @@ app.post("/signup", async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-// ---------------- Signin ----------------
 app.post("/signin", async (req: Request, res: Response): Promise<void> => {
   const parsedData = SigninSchema.safeParse(req.body);
   if (!parsedData.success) {
@@ -84,7 +81,6 @@ app.post("/signin", async (req: Request, res: Response): Promise<void> => {
   });
 });
 
-// ---------------- Create Room ----------------
 app.post("/room", middleware, async (req: Request, res: Response): Promise<void> => {
   const parsedData = CreateRoomSchema.safeParse(req.body);
   if (!parsedData.success) {
@@ -92,7 +88,7 @@ app.post("/room", middleware, async (req: Request, res: Response): Promise<void>
     return;
   }
 
-  // @ts-ignore (injected from middleware)
+  // @ts-ignore
   const userId = req.userId;
 
   try {
@@ -109,7 +105,6 @@ app.post("/room", middleware, async (req: Request, res: Response): Promise<void>
   }
 });
 
-// ---------------- Get Chats ----------------
 app.get("/chats/:roomId", async (req: Request, res: Response): Promise<void> => {
   try {
     const roomId = Number(req.params.roomId);
@@ -130,7 +125,6 @@ app.get("/chats/:roomId", async (req: Request, res: Response): Promise<void> => 
   }
 });
 
-// ---------------- Get Room by Slug ----------------
 app.get("/room/:slug", async (req: Request, res: Response): Promise<void> => {
   const slug = req.params.slug;
   const room = await prismaClient.room.findFirst({ where: { slug } });

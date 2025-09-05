@@ -5,8 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-toastify";
-
-const HTTP_BACKEND = "http://localhost:4001"; // Change this to your deployed backend in production
+import { HTTP_BACKEND } from "@/config";
 
 export default function SignupPage() {
   const router = useRouter();
