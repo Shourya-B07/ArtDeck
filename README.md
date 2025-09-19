@@ -43,7 +43,7 @@ Built with **pure Canvas  and coordinate-based logic** for rendering shapes and 
 ### Installation
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/artdeck.git
+git clone https://github.com/Shourya-B07/ArtDeck.git
 ```
 2. **Install dependencies**
 ```bash
