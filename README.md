@@ -1,5 +1,14 @@
 # ArtDeck - Real-time Collaborative Whiteboard 🎨
 
+[![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node-dot-js&logoColor=white)](https://nodejs.org/)
+[![Express.js](https://img.shields.io/badge/Express.js-404D59?style=for-the-badge)](https://expressjs.com/)
+[![WebSocket](https://img.shields.io/badge/WebSocket-FF6F00?style=for-the-badge&logo=websocket&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API)
+[![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)](https://jwt.io/)
+[![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)](https://www.prisma.io/)
+[![Turborepo](https://img.shields.io/badge/Turborepo-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://turbo.build/)
+
 A modern, real-time collaborative whiteboard platform where users can create or join rooms to draw, brainstorm, and collaborate instantly. ArtDeck supports multiple drawing tools, secure authentication, and real-time synchronization across users.  
 Built with **pure Canvas  and coordinate-based logic** for rendering shapes and drawings — no external drawing libraries used.  
 
