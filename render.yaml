@@ -1,0 +1,49 @@
+services:
+  # HTTP Backend
+  - type: web
+    name: artdeck-http-backend
+    env: node
+    plan: free
+    buildCommand: pnpm install && pnpm build --filter http-backend
+    startCommand: pnpm --filter http-backend start
+    envVars:
+      - key: PNPM_VERSION
+        value: 9.0.0
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+
+  # WebSocket Backend
+  - type: web
+    name: artdeck-ws-backend
+    env: node
+    plan: free
+    buildCommand: pnpm install && pnpm build --filter ws-backend
+    startCommand: pnpm --filter ws-backend start
+    envVars:
+      - key: PNPM_VERSION
+        value: 9.0.0
+      - key: DATABASE_URL
+        sync: false
+
+  # Frontend
+  - type: web
+    name: artdeck-frontend
+    env: node
+    plan: free
+    buildCommand: pnpm install && pnpm build --filter ArtDeck-frontend
+    startCommand: pnpm --filter ArtDeck-frontend start
+    envVars:
+      - key: PNPM_VERSION
+        value: 9.0.0
+      - key: NEXT_PUBLIC_HTTP_BACKEND_URL
+        fromService:
+          name: artdeck-http-backend
+          type: web
+          property: host
+      - key: NEXT_PUBLIC_WS_BACKEND_URL
+        fromService:
+          name: artdeck-ws-backend
+          type: web
+          property: host
