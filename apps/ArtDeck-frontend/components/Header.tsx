@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { PencilRuler } from 'lucide-react'
 
 
-
 export default function Header() {
   return (
     <header className="bg-white dark:bg-zinc-900 shadow-sm">

@@ -142,7 +142,7 @@ app.delete("/chats/:roomId/:messageId", middleware, async (req: Request, res: Re
   try {
     const roomId = Number(req.params.roomId);
     const messageId = Number(req.params.messageId);
-    
+
     if (isNaN(roomId) || isNaN(messageId)) {
       res.status(400).json({ message: "Invalid roomId or messageId" });
       return;
@@ -183,7 +183,7 @@ app.delete("/chats/:roomId", middleware, async (req: Request, res: Response): Pr
   try {
     const roomId = Number(req.params.roomId);
     const { messageIds } = req.body;
-    
+
     if (isNaN(roomId)) {
       res.status(400).json({ message: "Invalid roomId" });
       return;
@@ -207,9 +207,9 @@ app.delete("/chats/:roomId", middleware, async (req: Request, res: Response): Pr
       },
     });
 
-    res.status(200).json({ 
+    res.status(200).json({
       message: "Messages deleted successfully",
-      deletedCount: deleteResult.count 
+      deletedCount: deleteResult.count
     });
   } catch (e) {
     console.error("Error deleting messages:", e);

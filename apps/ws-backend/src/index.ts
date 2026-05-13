@@ -58,76 +58,88 @@ wss.on("connection", function connection(ws, request) {
       const parsedData =
         typeof data !== "string" ? JSON.parse(data.toString()) : JSON.parse(data);
 
-    if (parsedData.type === "join_room") {
-      const roomId = Number(parsedData.roomId);
-      if (isNaN(roomId)) {
-        console.error("Invalid roomId received:", parsedData.roomId);
-        return;
-      }
-      const user = users.find((x) => x.ws === ws);
-      if (user && !user.rooms.includes(roomId)) {
-        user.rooms.push(roomId);
-      }
-    }
-
-    if (parsedData.type === "leave_room") {
-      const roomId = Number(parsedData.roomId);
-      if (isNaN(roomId)) return;
-      const user = users.find((x) => x.ws === ws);
-      if (user) {
-        user.rooms = user.rooms.filter((x) => x !== roomId);
-      }
-    }
-
-    if (parsedData.type === "chat") {
-      const roomId = Number(parsedData.roomId);
-      const message = parsedData.message;
-
-      if (isNaN(roomId)) {
-        console.error("Invalid roomId for chat:", parsedData.roomId);
-        return;
+      if (parsedData.type === "join_room") {
+        const roomId = Number(parsedData.roomId);
+        if (isNaN(roomId)) {
+          console.error("Invalid roomId received:", parsedData.roomId);
+          return;
+        }
+        const user = users.find((x) => x.ws === ws);
+        if (user && !user.rooms.includes(roomId)) {
+          user.rooms.push(roomId);
+        }
       }
 
-      try {
-        // Parse the message to check the action
-        const messageData = JSON.parse(message);
-        
-        if (messageData.action === "delete") {
-          // Handle delete action - remove shapes from database
-          if (messageData.shapeId) {
-            // Delete by shape ID
-            await prismaClient.chat.deleteMany({
-              where: {
-                roomId: roomId,
-                message: {
-                  contains: `"id":"${messageData.shapeId}"`
+      if (parsedData.type === "leave_room") {
+        const roomId = Number(parsedData.roomId);
+        if (isNaN(roomId)) return;
+        const user = users.find((x) => x.ws === ws);
+        if (user) {
+          user.rooms = user.rooms.filter((x) => x !== roomId);
+        }
+      }
+
+      if (parsedData.type === "chat") {
+        const roomId = Number(parsedData.roomId);
+        const message = parsedData.message;
+
+        if (isNaN(roomId)) {
+          console.error("Invalid roomId for chat:", parsedData.roomId);
+          return;
+        }
+
+        try {
+          // Parse the message to check the action
+          const messageData = JSON.parse(message);
+
+          if (messageData.action === "delete") {
+            // Handle delete action - remove shapes from database
+            if (messageData.shapeId) {
+              // Delete by shape ID
+              await prismaClient.chat.deleteMany({
+                where: {
+                  roomId: roomId,
+                  message: {
+                    contains: `"id":"${messageData.shapeId}"`
+                  }
                 }
-              }
-            });
-            console.log(`Deleted shape with ID: ${messageData.shapeId} from room ${roomId}`);
-          } else if (messageData.shape) {
-            // Delete by shape content (fallback)
-            const shapeString = JSON.stringify(messageData.shape);
-            await prismaClient.chat.deleteMany({
-              where: {
-                roomId: roomId,
-                message: {
-                  contains: shapeString
+              });
+              console.log(`Deleted shape with ID: ${messageData.shapeId} from room ${roomId}`);
+            } else if (messageData.shape) {
+              // Delete by shape content (fallback)
+              const shapeString = JSON.stringify(messageData.shape);
+              await prismaClient.chat.deleteMany({
+                where: {
+                  roomId: roomId,
+                  message: {
+                    contains: shapeString
+                  }
                 }
-              }
-            });
-            console.log(`Deleted shape by content from room ${roomId}`);
-          }
-        } else if (messageData.action === "clear") {
-          // Handle clear action - remove all shapes from the room
-          await prismaClient.chat.deleteMany({
-            where: {
-              roomId: roomId
+              });
+              console.log(`Deleted shape by content from room ${roomId}`);
             }
-          });
-          console.log(`Cleared all shapes from room ${roomId}`);
-        } else {
-          // Handle create action - save new shape to database
+          } else if (messageData.action === "clear") {
+            // Handle clear action - remove all shapes from the room
+            await prismaClient.chat.deleteMany({
+              where: {
+                roomId: roomId
+              }
+            });
+            console.log(`Cleared all shapes from room ${roomId}`);
+          } else {
+            // Handle create action - save new shape to database
+            await prismaClient.chat.create({
+              data: {
+                roomId,
+                message,
+                userId,
+              },
+            });
+            console.log(`Created new shape in room ${roomId}`);
+          }
+        } catch (parseError) {
+          // If message is not valid JSON, treat it as a regular message
+          console.warn("Failed to parse message, treating as regular message:", parseError);
           await prismaClient.chat.create({
             data: {
               roomId,
@@ -135,33 +147,21 @@ wss.on("connection", function connection(ws, request) {
               userId,
             },
           });
-          console.log(`Created new shape in room ${roomId}`);
         }
-      } catch (parseError) {
-        // If message is not valid JSON, treat it as a regular message
-        console.warn("Failed to parse message, treating as regular message:", parseError);
-        await prismaClient.chat.create({
-          data: {
-            roomId,
-            message,
-            userId,
-          },
+
+        // Broadcast the message to all users in the room
+        users.forEach((user) => {
+          if (user.rooms.includes(roomId)) {
+            user.ws.send(
+              JSON.stringify({
+                type: "chat",
+                message,
+                roomId,
+              })
+            );
+          }
         });
       }
-
-      // Broadcast the message to all users in the room
-      users.forEach((user) => {
-        if (user.rooms.includes(roomId)) {
-          user.ws.send(
-            JSON.stringify({
-              type: "chat",
-              message,
-              roomId,
-            })
-          );
-        }
-      });
-    }
     } catch (error) {
       console.error(`Error processing message from user ${userId}:`, error);
     }
