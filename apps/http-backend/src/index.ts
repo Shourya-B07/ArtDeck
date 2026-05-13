@@ -7,7 +7,9 @@ import { prismaClient } from "@repo/db/client";
 import bcrypt from "bcrypt";
 import cors from "cors";
 
-const allowedOrigins = ["http://localhost:3000"];
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",")
+  : ["http://localhost:3000"];
 
 const app = express();
 app.use(express.json());
@@ -217,4 +219,5 @@ app.delete("/chats/:roomId", middleware, async (req: Request, res: Response): Pr
   }
 });
 
-app.listen(4001, () => console.log("http-backend listening on port 4001"));
+const port = process.env.PORT || 4001;
+app.listen(port, () => console.log(`http-backend listening on port ${port}`));
