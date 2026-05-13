@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { PencilRuler } from 'lucide-react'
 
-import { DarkModeToggle } from '@/components/DarkModeToogle'
+
 
 export default function Header() {
   return (
