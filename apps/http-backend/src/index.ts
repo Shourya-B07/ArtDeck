@@ -26,6 +26,16 @@ app.use(
     credentials: true,
   })
 );
+app.get("/health", async (req: Request, res: Response) => {
+  try {
+    await prismaClient.$queryRaw`SELECT 1`;
+    res.json({ status: "ok", db: "connected" });
+  } catch (e: any) {
+    console.error("Health check DB error:", e);
+    res.status(500).json({ status: "error", db: "disconnected", error: e.message });
+  }
+});
+
 app.post("/signup", async (req: Request, res: Response): Promise<void> => {
   const parsedData = CreateUserSchema.safeParse(req.body);
   if (!parsedData.success) {
@@ -44,8 +54,13 @@ app.post("/signup", async (req: Request, res: Response): Promise<void> => {
     });
 
     res.status(201).json({ userId: user.id });
-  } catch (e) {
-    res.status(409).json({ message: "User already exists" });
+  } catch (e: any) {
+    console.error("Signup error:", e);
+    if (e?.code === "P2002") {
+      res.status(409).json({ message: "User already exists" });
+    } else {
+      res.status(500).json({ message: "Internal server error" });
+    }
   }
 });
 
