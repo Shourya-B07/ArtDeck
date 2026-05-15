@@ -1,11 +1,11 @@
-import { CheckCircle, Mail, PencilRuler, ExternalLink, Presentation } from 'lucide-react';
+import { CheckCircle, Mail, PencilRuler, Presentation } from 'lucide-react';
 import Image from 'next/image';
 
 const iconComponents = {
   CheckCircle,
   Mail,
   PencilRuler,
-  ExternalLink,
+
   Presentation,
 };
 
@@ -13,7 +13,7 @@ const steps = [
   { icon: 'Presentation', name: 'Create a board', description: 'Start with a blank canvas.' },
   { icon: 'Mail', name: 'Invite your team', description: 'Share a link and collaborate in real-time with your team.' },
   { icon: 'PencilRuler', name: 'Sketch and ideate', description: 'Use our intuitive tools to bring your ideas to life.' },
-  { icon: 'ExternalLink', name: 'Export and share', description: 'Save your work as an image or share a live link with stakeholders.' },
+
 ];
 
 export default function HowItWorks() {

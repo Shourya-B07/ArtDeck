@@ -19,9 +19,6 @@ export default function Header() {
               <Link href="#how-it-works" className="text-base font-medium dark:text-zinc-300 hover:text-yellow-700 dark:hover:text-yellow-400">
                 How It Works
               </Link>
-              <Link href="#pricing" className="text-base font-medium dark:text-zinc-300 hover:text-yellow-700 dark:hover:text-yellow-400">
-                Pricing
-              </Link>
               <Link href="/canvas" className="text-base font-medium dark:text-zinc-300 hover:text-yellow-700 dark:hover:text-yellow-400">
                 Canvas
               </Link>

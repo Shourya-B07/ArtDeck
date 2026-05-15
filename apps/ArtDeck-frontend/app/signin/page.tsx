@@ -1,8 +1,8 @@
 "use client";
 
-import { PencilRuler } from "lucide-react";
+import { PencilRuler, Copy, Check } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { useDispatch } from "react-redux";
@@ -25,6 +25,20 @@ export default function SigninPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [showBanner, setShowBanner] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowBanner(true), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const copyToClipboard = (text: string, field: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 1500);
   };
 
   const login = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -139,6 +153,62 @@ export default function SigninPage() {
             Login
           </button>
         </form>
+      </div>
+
+      {/* Floating Test Credentials Banner */}
+      <div
+        className={`fixed bottom-6 right-6 z-50 transition-all duration-700 ease-out ${
+          showBanner
+            ? "translate-y-0 opacity-100"
+            : "translate-y-16 opacity-0"
+        }`}
+      >
+        <div className="bg-zinc-900/90 backdrop-blur-md border border-yellow-500/30 rounded-xl p-5 shadow-2xl max-w-xs">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+            <p className="text-xs font-semibold text-yellow-400 uppercase tracking-wider">
+              Test Account
+            </p>
+          </div>
+
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between bg-zinc-800/80 rounded-lg px-3 py-2">
+              <div>
+                <p className="text-[10px] text-zinc-500 uppercase tracking-wide">Email</p>
+                <p className="text-sm text-zinc-200 font-mono">test1234@gmail.com</p>
+              </div>
+              <button
+                onClick={() => copyToClipboard("test1234@gmail.com", "email")}
+                className="ml-3 p-1.5 rounded-md hover:bg-zinc-700 transition-colors"
+                title="Copy email"
+              >
+                {copiedField === "email" ? (
+                  <Check size={14} className="text-green-400" />
+                ) : (
+                  <Copy size={14} className="text-zinc-400" />
+                )}
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between bg-zinc-800/80 rounded-lg px-3 py-2">
+              <div>
+                <p className="text-[10px] text-zinc-500 uppercase tracking-wide">Password</p>
+                <p className="text-sm text-zinc-200 font-mono">Test#123</p>
+              </div>
+              <button
+                onClick={() => copyToClipboard("Test#123", "password")}
+                className="ml-3 p-1.5 rounded-md hover:bg-zinc-700 transition-colors"
+                title="Copy password"
+              >
+                {copiedField === "password" ? (
+                  <Check size={14} className="text-green-400" />
+                ) : (
+                  <Copy size={14} className="text-zinc-400" />
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

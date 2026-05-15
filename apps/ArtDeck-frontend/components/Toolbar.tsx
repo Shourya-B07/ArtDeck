@@ -75,26 +75,6 @@ export function Topbar(
                 {/* Tool Icons */}
                 <IconButton
                     onClick={() => {
-                        setSelectedTool("point");
-                    }}
-                    activated={selectedTool === "point"}
-                    icon={<MousePointer2 size={20} />}
-                    className="hidden sm:inline-block"
-                    title="Pointer (Ctrl+A)"
-                />
-
-                <IconButton
-                    onClick={() => {
-                        setSelectedTool("select");
-                    }}
-                    activated={selectedTool === "select"}
-                    icon={<SquareDashedMousePointer size={20} />}
-                    className="hidden sm:inline-block"
-                    title="Select"
-                />
-
-                <IconButton
-                    onClick={() => {
                         setSelectedTool("hand");
                     }}
                     activated={selectedTool === "hand"}
